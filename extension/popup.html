@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MightyLink Companion</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header (Logged In View) -->
+    <header class="app-header" id="mainHeader">
+      <div class="brand">
+        <img src="icons/icon32.png" alt="MightyLink" class="brand-logo">
+        <div class="brand-text">
+          <span class="brand-name">mightylink</span>
+          <span class="brand-tag">PRO</span>
+        </div>
+      </div>
+      <div class="account-pill" id="accountPill" title="Click to view account">
+        <span class="status-dot"></span>
+        <span class="account-email" id="headerUserEmail">user@mail.com</span>
+      </div>
+      <button class="icon-btn" id="openSettingsBtn" title="Extension Settings">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+      </button>
+    </header>
+
+    <!-- View 1: Email Sign-In (Shown if not logged in) -->
+    <section id="loginView" class="view-content auth-view">
+      <div class="auth-hero">
+        <img src="icons/icon48.png" alt="MightyLink" class="auth-logo">
+        <h2>Sign in to MightyLink</h2>
+        <p>Connect your browser with your mobile app account to sync workspaces and links automatically.</p>
+      </div>
+
+      <div class="auth-form">
+        <label for="loginEmailInput" class="form-label">Your MightyLink Email</label>
+        <div class="input-with-icon">
+          <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <input type="email" id="loginEmailInput" class="form-input" placeholder="alex@mightylink.io" value="alex@mightylink.io">
+        </div>
+
+        <button id="emailLoginBtn" class="primary-btn mt-3">
+          <span>Sign In & Sync</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+
+        <div class="auth-hint">
+          <span>Use the same email as your MightyLink app.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- View 2: Save Bookmark Form (Active when logged in) -->
+    <main id="saveFormView" class="view-content">
+      <!-- Active Tab Card -->
+      <div class="tab-preview-card">
+        <img id="tabFavicon" src="icons/icon16.png" class="tab-favicon" alt="Favicon">
+        <div class="tab-meta">
+          <div id="tabDomain" class="tab-domain">loading...</div>
+          <div id="tabUrl" class="tab-url-snippet">https://...</div>
+        </div>
+      </div>
+
+      <!-- Form Inputs -->
+      <div class="form-group">
+        <label for="linkTitleInput" class="form-label">Link Title</label>
+        <input type="text" id="linkTitleInput" class="form-input" placeholder="Page title...">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label for="workspaceSelect" class="form-label">Target Workspace</label>
+          <div class="select-wrapper">
+            <select id="workspaceSelect" class="form-select">
+              <option value="General">📂 General</option>
+              <option value="Design System">🎨 Design System</option>
+              <option value="Development">💻 Development</option>
+              <option value="Marketing & Growth">🚀 Marketing</option>
+              <option value="Read Later">📖 Read Later</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature Badges / Modifiers -->
+      <div class="modifiers-row">
+        <label class="chip-toggle" id="favoriteToggle">
+          <input type="checkbox" id="favoriteCheck">
+          <span class="chip-content">
+            <span class="chip-icon">⭐</span>
+            <span class="chip-label">Favorite</span>
+          </span>
+        </label>
+
+        <label class="chip-toggle" id="reminderToggle">
+          <input type="checkbox" id="reminderCheck">
+          <span class="chip-content">
+            <span class="chip-icon">⏰</span>
+            <span class="chip-label">Todo</span>
+          </span>
+        </label>
+
+        <label class="chip-toggle" id="vaultToggle">
+          <input type="checkbox" id="vaultCheck">
+          <span class="chip-content">
+            <span class="chip-icon">🛡️</span>
+            <span class="chip-label">Vault</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Note / Tags Input -->
+      <div class="form-group">
+        <label for="linkNotesInput" class="form-label">Notes & Tags</label>
+        <input type="text" id="linkNotesInput" class="form-input" placeholder="e.g. #important, review for sprint">
+      </div>
+
+      <!-- Action Button -->
+      <button id="saveLinkBtn" class="primary-btn">
+        <span class="btn-text">Save Bookmark</span>
+        <span class="btn-shortcut">Alt + S</span>
+      </button>
+    </main>
+
+    <!-- View 3: Success Confirmation -->
+    <section id="successView" class="view-content success-card">
+      <div class="success-icon-wrap">
+        <svg class="checkmark-svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="24" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+      </div>
+      <h2 class="success-title">Bookmark Saved!</h2>
+      <p id="successSubtitle" class="success-sub">Synced to your MightyLink account.</p>
+
+      <div class="success-actions">
+        <button id="copySavedUrlBtn" class="secondary-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy URL
+        </button>
+        <button id="doneBtn" class="primary-btn btn-sm">Done</button>
+      </div>
+    </section>
+
+    <!-- View 4: Account Details Modal (Slide in on Account pill tap) -->
+    <section id="accountModalView" class="view-content account-card">
+      <div class="account-card-header">
+        <div class="account-avatar" id="accountAvatarLetter">A</div>
+        <div class="account-meta">
+          <div class="account-name" id="accountDisplayName">Alex Rivera</div>
+          <div class="account-email-sub" id="accountModalEmail">alex@mightylink.io</div>
+        </div>
+      </div>
+      
+      <div class="account-sync-info">
+        <div class="sync-row">
+          <span>Sync Status</span>
+          <span class="sync-badge">🟢 Connected</span>
+        </div>
+        <div class="sync-row">
+          <span>Active Plan</span>
+          <span class="plan-badge">MightyLink PRO</span>
+        </div>
+      </div>
+
+      <button id="logoutBtn" class="secondary-btn text-danger full-width mt-3">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        Switch / Sign Out Account
+      </button>
+
+      <button id="closeAccountModalBtn" class="text-btn">Back to Bookmark</button>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer" id="appFooter">
+      <span class="footer-left">Press <kbd>Alt</kbd> + <kbd>S</kbd> to save</span>
+      <a href="#" id="viewAllLinksLink" class="footer-link">My Bookmarks</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

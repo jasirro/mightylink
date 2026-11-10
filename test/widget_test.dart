@@ -23,8 +23,8 @@ void main() {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const LinkNestApp());
 
-    // Verify that the splash screen shows 'linku'.
-    expect(find.text('linku'), findsOneWidget);
+    // Verify that the splash screen shows 'mightylink'.
+    expect(find.text('mightylink'), findsOneWidget);
 
     // Allow the 2-second delay to finish.
     await tester.pump(const Duration(seconds: 2));

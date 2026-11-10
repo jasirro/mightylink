@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../theme/app_colors.dart';
+import '../widgets/linku_logo.dart';
 import 'main_screen.dart';
 import 'login_screen.dart';
 
@@ -18,8 +21,8 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
-    // Add a small delay for the splash screen effect
-    await Future.delayed(const Duration(seconds: 2));
+    // Add smooth duration for the Figma splash presentation
+    await Future.delayed(const Duration(milliseconds: 2200));
 
     final authBox = Hive.box('auth');
     final isLoggedIn = authBox.get('isLoggedIn', defaultValue: false);
@@ -28,12 +31,22 @@ class _SplashScreenState extends State<SplashScreen> {
       if (isLoggedIn) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
+          PageRouteBuilder(
+            pageBuilder: (context, anim, secAnim) => const MainScreen(),
+            transitionsBuilder: (context, anim, secAnim, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
         );
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          PageRouteBuilder(
+            pageBuilder: (context, anim, secAnim) => const LoginScreen(),
+            transitionsBuilder: (context, anim, secAnim, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
         );
       }
     }
@@ -42,60 +55,40 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(context).colorScheme.surface,
-            ],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.link,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                ),
+      backgroundColor: AppColors.primaryViolet,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Spacer(),
+            const LinkuLogo(size: 68)
+                .animate()
+                .scale(duration: 600.ms, curve: Curves.easeOutBack)
+                .fadeIn(duration: 600.ms),
+            const SizedBox(height: 16),
+            const Text(
+              'Your workspace link hub',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textOnPurpleMuted,
+                letterSpacing: 0.2,
               ),
-              const SizedBox(height: 24),
-              Text(
-                'linku',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                      letterSpacing: 1.2,
-                    ),
+            )
+                .animate()
+                .fadeIn(delay: 300.ms, duration: 500.ms)
+                .slideY(begin: 0.2, end: 0, duration: 500.ms),
+            const Spacer(),
+            const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Your personal link hub',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-              ),
-              const SizedBox(height: 48),
-              const CircularProgressIndicator(),
-            ],
-          ),
+            ).animate().fadeIn(delay: 500.ms, duration: 400.ms),
+            const SizedBox(height: 48),
+          ],
         ),
       ),
     );

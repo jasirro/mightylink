@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MightyLink Account & Extension Settings</title>
+  <style>
+    :root {
+      --primary-violet: #5619F6;
+      --primary-violet-light: #F3F0FF;
+      --accent-yellow: #F7CA43;
+      --text-dark: #18181B;
+      --text-muted: #64748B;
+      --border-light: #EDE9FE;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background: #F8FAFC;
+      color: var(--text-dark);
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #5619F6 0%, #6F3CF8 100%);
+      color: white;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .logo-img {
+      width: 48px;
+      height: 48px;
+      background: white;
+      border-radius: 14px;
+      padding: 4px;
+    }
+    .title h1 {
+      font-size: 22px;
+      font-weight: 800;
+    }
+    .title p {
+      font-size: 13px;
+      color: #D4C8FF;
+    }
+    .content {
+      padding: 32px;
+    }
+    .section {
+      margin-bottom: 28px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .input-box {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border-light);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--primary-violet);
+      font-weight: 700;
+    }
+    .input-box:focus {
+      outline: none;
+      border-color: var(--primary-violet);
+    }
+    .save-btn {
+      background: var(--accent-yellow);
+      color: var(--text-dark);
+      font-weight: 800;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .save-btn:hover {
+      opacity: 0.9;
+    }
+    .links-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+    }
+    .links-table th, .links-table td {
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .links-table th {
+      background: var(--primary-violet-light);
+      font-weight: 800;
+      color: var(--primary-violet);
+    }
+    .toast {
+      display: none;
+      background: #15CA91;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .account-badge-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: var(--primary-violet-light);
+      border-radius: 16px;
+      border: 1px solid var(--border-light);
+      margin-bottom: 14px;
+    }
+    .badge-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--primary-violet);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+    }
+    .badge-email {
+      font-weight: 800;
+      color: var(--primary-violet);
+      font-size: 14px;
+    }
+    .sync-status {
+      font-size: 12px;
+      color: #15803D;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="icons/icon48.png" alt="MightyLink" class="logo-img">
+      <div class="title">
+        <h1>MightyLink Account Settings</h1>
+        <p>Sync workspaces & bookmarks with your MightyLink email</p>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section">
+        <h2 class="section-title">Connected Email Account</h2>
+        <p class="section-desc">Bookmarks and workspaces sync with your MightyLink mobile app under this account.</p>
+
+        <div class="account-badge-card">
+          <div class="badge-left">
+            <div class="badge-avatar" id="badgeAvatar">A</div>
+            <div>
+              <div class="badge-email" id="displayEmail">alex@mightylink.io</div>
+              <div class="sync-status">🟢 Cloud Sync Active</div>
+            </div>
+          </div>
+          <button id="switchAccountBtn" class="save-btn" style="margin-top:0; padding:8px 16px; font-size:12px;">Switch Email</button>
+        </div>
+
+        <div id="emailEditArea" style="display:none; margin-top:14px;">
+          <input type="email" id="emailInput" class="input-box" placeholder="name@company.com">
+          <button id="saveEmailBtn" class="save-btn">Update & Re-sync Account</button>
+        </div>
+        <div id="toast" class="toast">✓ Account email updated & synced!</div>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Saved Bookmarks Under This Account</h2>
+        <p class="section-desc" id="linkCountDesc">0 bookmarks recorded</p>
+        <table class="links-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Workspace</th>
+              <th>Account</th>
+              <th>Saved</th>
+            </tr>
+          </thead>
+          <tbody id="linksBody">
+            <tr><td colspan="4" style="text-align:center; color:#94A3B8;">No links saved yet. Press Alt+S on any tab!</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

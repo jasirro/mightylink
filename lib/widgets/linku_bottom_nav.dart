@@ -13,31 +13,87 @@ class LinkuBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
-      selectedIndex: currentIndex,
-      onDestinationSelected: onItemSelected,
-      backgroundColor: Colors.white,
-      // ignore: deprecated_member_use
-      indicatorColor: AppColors.primaryNavy.withOpacity(0.1),
-      elevation: 0,
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      destinations: const [
-        NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home, color: AppColors.primaryNavy),
-          label: 'Home',
+    return SafeArea(
+      bottom: true,
+      child: Container(
+        height: 64,
+        margin: const EdgeInsets.fromLTRB(28, 0, 28, 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33000000),
+              blurRadius: 24,
+              offset: Offset(0, 10),
+              spreadRadius: 0,
+            ),
+          ],
         ),
-        NavigationDestination(
-          icon: Icon(Icons.settings_outlined),
-          selectedIcon: Icon(Icons.settings, color: AppColors.primaryNavy),
-          label: 'Settings',
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(
+              index: 0,
+              icon: Icons.grid_view_rounded,
+              label: 'Workspaces',
+            ),
+            _buildNavItem(
+              index: 1,
+              icon: Icons.space_dashboard_rounded,
+              label: 'Dashboard',
+            ),
+            _buildNavItem(
+              index: 2,
+              icon: Icons.person_rounded,
+              label: 'Settings',
+            ),
+          ],
         ),
-        NavigationDestination(
-          icon: Icon(Icons.folder_outlined),
-          selectedIcon: Icon(Icons.folder, color: AppColors.navActiveRed),
-          label: 'Workspaces',
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required int index,
+    required IconData icon,
+    required String label,
+  }) {
+    final isSelected = currentIndex == index;
+
+    return InkWell(
+      onTap: () => onItemSelected(index),
+      borderRadius: BorderRadius.circular(24),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.surfaceVioletTint : Colors.transparent,
+          borderRadius: BorderRadius.circular(22),
         ),
-      ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? AppColors.primaryViolet : AppColors.iconMuted,
+            ),
+            if (isSelected) ...[
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.primaryViolet,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

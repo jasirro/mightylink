@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linku/models/group.dart';
-import 'package:linku/theme/app_colors.dart';
 import 'package:linku/widgets/linku_bottom_nav.dart';
 import 'package:linku/widgets/linku_header.dart';
 import 'package:linku/widgets/workspace_card.dart';
@@ -10,17 +9,17 @@ import 'package:linku/widgets/workspace_fab.dart';
 void main() {
   testWidgets('LinkuHeader renders branding, titles, and actions', (WidgetTester tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
         home: Scaffold(
-          body: LinkuHeader(),
+          body: LinkuHeader(
+            onSearchPressed: () {},
+          ),
         ),
       ),
     );
 
-    expect(find.text('Linku'), findsOneWidget);
     expect(find.text('Workspaces'), findsOneWidget);
-    expect(find.text('Manage your ideas'), findsOneWidget);
-    expect(find.byIcon(Icons.settings), findsOneWidget);
+    expect(find.text('Manage your links'), findsOneWidget);
     expect(find.byIcon(Icons.search_rounded), findsOneWidget);
   });
 
@@ -43,9 +42,8 @@ void main() {
     );
 
     expect(find.text('flutter'), findsOneWidget);
-    expect(find.text('4 items'), findsOneWidget);
+    expect(find.text('4 links'), findsOneWidget);
     expect(find.byIcon(Icons.folder_rounded), findsOneWidget);
-    expect(find.byIcon(Icons.layers_outlined), findsOneWidget);
     expect(find.byIcon(Icons.more_vert_rounded), findsOneWidget);
   });
 
@@ -61,13 +59,13 @@ void main() {
       ),
     );
 
-    expect(find.byIcon(Icons.add), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.add));
+    expect(find.byIcon(Icons.add_rounded), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.add_rounded));
     expect(pressed, isTrue);
   });
 
-  testWidgets('LinkuBottomNav highlights Files in red when index is 2', (WidgetTester tester) async {
-    int selected = 2;
+  testWidgets('LinkuBottomNav renders Workspaces, Dashboard, and Settings tabs', (WidgetTester tester) async {
+    int selected = 1;
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -79,11 +77,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Home'), findsOneWidget);
-    expect(find.text('Tools'), findsOneWidget);
-    expect(find.text('Files'), findsOneWidget);
-
-    final filesTextWidget = tester.widget<Text>(find.text('Files'));
-    expect(filesTextWidget.style?.color, AppColors.navActiveRed);
+    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.byIcon(Icons.grid_view_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.space_dashboard_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.person_rounded), findsOneWidget);
   });
 }

@@ -1,21 +1,32 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String message;
   final String? subtitle;
+  final bool onLightBackground;
 
   const EmptyState({
     super.key,
     required this.icon,
     required this.message,
     this.subtitle,
+    this.onLightBackground = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
+    final iconColor = onLightBackground
+        ? AppColors.iconMuted
+        : Colors.white.withValues(alpha: 0.6);
+    final titleColor = onLightBackground
+        ? AppColors.cardTitle
+        : Colors.white;
+    final subColor = onLightBackground
+        ? AppColors.cardSubtitle
+        : AppColors.textOnPurpleMuted;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32.0),
@@ -23,17 +34,28 @@ class EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: onLightBackground
+                    ? AppColors.surfaceVioletTint
+                    : Colors.white.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 38,
+                color: iconColor,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             Text(
               message,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: titleColor,
+                fontWeight: FontWeight.w700,
+                fontSize: 18,
               ),
               textAlign: TextAlign.center,
             ),
@@ -41,12 +63,14 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 subtitle!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                style: TextStyle(
+                  color: subColor,
+                  fontSize: 14,
+                  height: 1.4,
                 ),
                 textAlign: TextAlign.center,
               ),
-            ]
+            ],
           ],
         ),
       ),

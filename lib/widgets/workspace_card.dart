@@ -23,14 +23,14 @@ class WorkspaceCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.cardBorder, width: 1.5),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: const [AppColors.cardShadow],
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         child: InkWell(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(18.0),
@@ -66,7 +66,7 @@ class WorkspaceCard extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(16),
                       ),
                       onSelected: (value) {
                         if (value == 'edit' && onEdit != null) {
@@ -80,9 +80,9 @@ class WorkspaceCard extends StatelessWidget {
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit_outlined, size: 18),
-                              SizedBox(width: 8),
-                              Text('Edit'),
+                              Icon(Icons.edit_outlined, size: 18, color: AppColors.cardTitle),
+                              SizedBox(width: 10),
+                              Text('Edit', style: TextStyle(fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -91,8 +91,8 @@ class WorkspaceCard extends StatelessWidget {
                           child: Row(
                             children: [
                               Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('Delete', style: TextStyle(color: Colors.red)),
+                              SizedBox(width: 10),
+                              Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -100,14 +100,14 @@ class WorkspaceCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Middle & Bottom: Name and item count with stack icon
+                // Middle & Bottom: Workspace Name and item count badge
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       group.name,
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: AppColors.cardTitle,
                         letterSpacing: -0.2,
@@ -119,13 +119,13 @@ class WorkspaceCard extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(
-                          Icons.layers_outlined,
+                          Icons.link_rounded,
                           size: 15,
                           color: AppColors.cardSubtitle,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Text(
-                          '$itemCount items',
+                          '$itemCount links',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,

@@ -12,8 +12,8 @@ class WorkspaceFab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 62,
-      height: 62,
+      width: 58,
+      height: 58,
       decoration: const BoxDecoration(
         color: AppColors.fabGreen,
         shape: BoxShape.circle,
@@ -27,9 +27,9 @@ class WorkspaceFab extends StatelessWidget {
           customBorder: const CircleBorder(),
           child: const Center(
             child: Icon(
-              Icons.add,
+              Icons.add_rounded,
               color: Colors.white,
-              size: 34,
+              size: 32,
             ),
           ),
         ),

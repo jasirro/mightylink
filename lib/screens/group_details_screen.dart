@@ -1,14 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/saved_link.dart';
 import '../services/db_service.dart';
+import '../services/google_drive_sync_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/linku_bottom_nav.dart';
 import '../widgets/saved_link_card.dart';
+import '../widgets/workspace_fab.dart';
 import 'add_link_screen.dart';
 import 'link_details_screen.dart';
-import 'main_screen.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class GroupDetailsScreen extends StatefulWidget {
   final String title;
@@ -28,31 +30,53 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   bool _isSearchVisible = false;
+  Timer? _searchDebounceTimer;
 
   @override
   void dispose() {
+    _searchDebounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String val) {
+    _searchDebounceTimer?.cancel();
+    _searchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        setState(() {
+          _searchQuery = val.trim();
+        });
+      }
+    });
   }
 
   void _showDeleteDialog(BuildContext context, SavedLink link) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Link?'),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text(
+          'Delete Link?',
+          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.cardTitle),
+        ),
         content: Text('Are you sure you want to delete "${link.title}"?'),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: AppColors.cardSubtitle)),
           ),
           FilledButton(
             onPressed: () async {
+              GoogleDriveSyncService.recordDeletedLink(link.id);
               await link.delete();
+              GoogleDriveSyncService.scheduleDebouncedSync();
               if (context.mounted) Navigator.pop(context);
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.deleteRed,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text('Delete'),
           ),
@@ -85,35 +109,43 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Text(
                 'Share "${widget.title}" Workspace',
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryNavy,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.cardTitle,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
-                'Export or share links in this workspace with other applications.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.subtitle,
-                ),
+                'Export or copy links in this workspace.',
+                style: TextStyle(fontSize: 13, color: AppColors.cardSubtitle),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.copy_rounded, color: AppColors.brandDark),
-                title: const Text('Copy Workspace Name'),
-                contentPadding: EdgeInsets.zero,
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: const BoxDecoration(
+                    color: AppColors.surfaceVioletTint,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.copy_rounded, color: AppColors.primaryViolet),
+                ),
+                title: const Text('Copy Workspace Name', style: TextStyle(fontWeight: FontWeight.w600)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Copied "${widget.title}" to clipboard')),
+                    SnackBar(
+                      content: Text('Copied "${widget.title}" to clipboard'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
                   );
                 },
               ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -121,24 +153,35 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     );
   }
 
+  void _showAddLinkSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddLinkScreen(
+        existingLink: null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primaryViolet,
       body: SafeArea(
         child: Column(
           children: [
-            // Top App Bar matching Figma
+            // Top App Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
               child: Row(
                 children: [
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(
                       Icons.arrow_back_ios_new_rounded,
-                      color: AppColors.cardTitle,
-                      size: 22,
+                      color: Colors.white,
+                      size: 20,
                     ),
                     tooltip: 'Back',
                   ),
@@ -147,81 +190,67 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     child: Text(
                       widget.title,
                       style: const TextStyle(
-                        fontSize: 26,
+                        fontSize: 24,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.cardTitle,
+                        color: Colors.white,
                         letterSpacing: -0.5,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // Search icon
                   IconButton(
                     onPressed: () {
                       setState(() {
                         _isSearchVisible = !_isSearchVisible;
                         if (!_isSearchVisible) {
+                          _searchDebounceTimer?.cancel();
                           _searchController.clear();
                           _searchQuery = '';
                         }
                       });
                     },
-                    icon: const Icon(
-                      Icons.search_rounded,
-                      color: AppColors.cardTitle,
-                      size: 26,
+                    icon: Icon(
+                      _isSearchVisible ? Icons.close : Icons.search_rounded,
+                      color: Colors.white,
+                      size: 24,
                     ),
-                    tooltip: 'Search inside workspace',
                   ),
-                  // Share icon
                   IconButton(
                     onPressed: () => _showShareDialog(context),
                     icon: const Icon(
                       Icons.ios_share_rounded,
-                      color: AppColors.cardTitle,
-                      size: 24,
+                      color: Colors.white,
+                      size: 22,
                     ),
-                    tooltip: 'Share workspace',
                   ),
                 ],
               ),
             ),
-            // Search field when active
             if (_isSearchVisible)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'Search inside ${widget.title}...',
-                    hintStyle: const TextStyle(color: AppColors.subtitle),
-                    prefixIcon: const Icon(Icons.search, color: AppColors.primaryNavy),
-                    filled: true,
-                    fillColor: AppColors.background,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey.shade200),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: AppColors.primaryNavy, width: 1.5),
-                    ),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  onChanged: (val) {
-                    setState(() {
-                      _searchQuery = val.trim();
-                    });
-                  },
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    style: const TextStyle(color: AppColors.cardTitle, fontWeight: FontWeight.w600),
+                    decoration: InputDecoration(
+                      hintText: 'Search inside ${widget.title}...',
+                      hintStyle: const TextStyle(color: AppColors.iconMuted),
+                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primaryViolet),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    ),
+                    onChanged: _onSearchChanged,
+                  ),
                 ),
               ),
-            // Real-time link grid from Hive
+            // Content
             Expanded(
               child: ValueListenableBuilder<Box<SavedLink>>(
                 valueListenable: DbService.linksBox.listenable(),
@@ -232,93 +261,50 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
                   if (_searchQuery.isNotEmpty) {
-                    final query = _searchQuery.toLowerCase();
-                    links = links
-                        .where((l) =>
-                            l.title.toLowerCase().contains(query) ||
-                            l.url.toLowerCase().contains(query) ||
-                            l.note.toLowerCase().contains(query))
-                        .toList();
+                    links = links.where((l) =>
+                        l.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                        l.url.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                        l.note.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
                   }
 
                   if (links.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          EmptyState(
-                            icon: Icons.link_off_rounded,
-                            message: _searchQuery.isNotEmpty
-                                ? 'No matching links found'
-                                : 'No links yet',
-                            subtitle: _searchQuery.isNotEmpty
-                                ? 'Try a different search query.'
-                                : 'Save your first link to "${widget.title}".',
-                          ),
-                          if (_searchQuery.isEmpty) ...[
-                            const SizedBox(height: 16),
-                            FilledButton.icon(
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  useSafeArea: true,
-                                  builder: (context) => const AddLinkScreen(),
-                                );
-                              },
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.brandDark,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Add Link'),
-                            ),
-                          ],
-                        ],
-                      ),
+                    return EmptyState(
+                      icon: Icons.link_off_rounded,
+                      message: _searchQuery.isNotEmpty ? 'No matching links' : 'No links in workspace',
+                      subtitle: _searchQuery.isNotEmpty
+                          ? 'Try searching with a different term.'
+                          : 'Tap the green + button to save your first link to this workspace.',
                     );
                   }
 
-                  return LayoutBuilder(
-                    builder: (context, constraints) {
-                      final int crossAxisCount = constraints.maxWidth >= 600 ? 4 : 2;
-                      final double childAspectRatio = crossAxisCount == 4 ? 0.72 : 0.80;
-
-                      return GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                          childAspectRatio: childAspectRatio,
-                        ),
-                        itemCount: links.length,
-                        itemBuilder: (context, index) {
-                          final link = links[index];
-                          return SavedLinkCard(
-                            link: link,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => LinkDetailsScreen(link: link),
-                                ),
-                              );
-                            },
-                            onFavoriteToggle: () async {
-                              link.isFavorite = !link.isFavorite;
-                              await link.save();
-                            },
-                            onDelete: () => _showDeleteDialog(context, link),
+                  return GridView.builder(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 100),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 14,
+                      mainAxisSpacing: 14,
+                      childAspectRatio: 0.88,
+                    ),
+                    itemCount: links.length,
+                    itemBuilder: (context, index) {
+                      final link = links[index];
+                      return SavedLinkCard(
+                        link: link,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => LinkDetailsScreen(link: link),
+                            ),
                           );
                         },
-                      );
+                        onFavoriteToggle: () async {
+                          link.isFavorite = !link.isFavorite;
+                          await link.save();
+                          GoogleDriveSyncService.scheduleDebouncedSync();
+                        },
+                        onDelete: () => _showDeleteDialog(context, link),
+                      ).animate().fade(duration: 250.ms).slideY(begin: 0.08, duration: 250.ms, delay: (index * 30).ms);
                     },
                   );
                 },
@@ -327,20 +313,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: LinkuBottomNav(
-        currentIndex: 2,
-        onItemSelected: (index) {
-          if (index == 2) {
-            Navigator.pop(context);
-          } else {
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                builder: (context) => MainScreen(initialIndex: index),
-              ),
-              (route) => false,
-            );
-          }
-        },
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: WorkspaceFab(
+          onPressed: _showAddLinkSheet,
+        ),
       ),
     );
   }
