@@ -13,7 +13,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Auth View Elements
   const loginEmailInput = document.getElementById("loginEmailInput");
+  const loginPasswordInput = document.getElementById("loginPasswordInput");
   const emailLoginBtn = document.getElementById("emailLoginBtn");
+  const loginBtnText = document.getElementById("loginBtnText");
+  const loginErrorMsg = document.getElementById("loginErrorMsg");
+  const toggleRegisterBtn = document.getElementById("toggleRegisterBtn");
+  const toggleRegisterText = document.getElementById("toggleRegisterText");
 
   // Bookmark Form Elements
   const tabFavicon = document.getElementById("tabFavicon");
@@ -42,6 +47,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   let currentTab = null;
   let currentUser = null;
+  let authToken = null;
+  let isRegistering = false;
+  let apiBaseUrl = "http://localhost:5000";
+
+  // Load configured API URL
+  chrome.storage.local.get(["apiUrl"], (data) => {
+    if (data.apiUrl) apiBaseUrl = data.apiUrl;
+  });
+
+  // Toggle Login / Register
+  if (toggleRegisterBtn) {
+    toggleRegisterBtn.addEventListener("click", () => {
+      isRegistering = !isRegistering;
+      if (isRegistering) {
+        loginBtnText.textContent = "Register & Sync";
+        toggleRegisterText.textContent = "Already have an account? Sign In";
+      } else {
+        loginBtnText.textContent = "Sign In & Sync";
+        toggleRegisterText.textContent = "Need an account? Register free";
+      }
+      loginErrorMsg.style.display = "none";
+    });
+  }
 
   // 1. Detect Active Browser Tab
   try {
@@ -63,8 +91,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // 2. Check Auth Session
-  chrome.storage.local.get(["userEmail", "userName", "workspaces"], (data) => {
-    if (data.userEmail) {
+  chrome.storage.local.get(["authToken", "userEmail", "userName", "workspaces"], (data) => {
+    if (data.authToken && data.userEmail) {
+      authToken = data.authToken;
       currentUser = {
         email: data.userEmail,
         name: data.userName || data.userEmail.split("@")[0],
@@ -109,34 +138,70 @@ document.addEventListener("DOMContentLoaded", async () => {
     appFooter.style.display = "none";
   }
 
-  // 3. Email Sign-In Action
-  function performEmailLogin() {
+  // 3. API Auth (Login or Register)
+  async function performEmailLogin() {
     const email = loginEmailInput.value.trim().toLowerCase();
+    const password = loginPasswordInput.value.trim();
+
     if (!email || !email.includes("@")) {
+      showError("Please enter a valid email address.");
       loginEmailInput.focus();
       return;
     }
+    if (!password) {
+      showError("Please enter your password.");
+      loginPasswordInput.focus();
+      return;
+    }
 
-    const name = email.split("@")[0];
-    const initialWorkspaces = ["General", "Design System", "Development", "Marketing", "Read Later"];
+    loginBtnText.textContent = "Connecting...";
+    loginErrorMsg.style.display = "none";
 
-    chrome.storage.local.set({
-      userEmail: email,
-      userName: name.charAt(0).toUpperCase() + name.slice(1),
-      workspaces: initialWorkspaces,
-      pairingKey: "ML-ACCOUNT-SYNC",
-    }, () => {
-      currentUser = { email, name };
-      setupLoggedInUI(currentUser);
-    });
+    const endpoint = isRegistering ? "/api/auth/register" : "/api/auth/login";
+    try {
+      const res = await fetch(`${apiBaseUrl}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name: email.split("@")[0] })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        showError(data.error || "Authentication failed. Check credentials.");
+        loginBtnText.textContent = isRegistering ? "Register & Sync" : "Sign In & Sync";
+        return;
+      }
+
+      authToken = data.token;
+      currentUser = data.user;
+      const initialWorkspaces = ["General", "Design System", "Development", "Marketing", "Read Later"];
+
+      chrome.storage.local.set({
+        authToken: data.token,
+        userEmail: currentUser.email,
+        userName: currentUser.name,
+        workspaces: initialWorkspaces,
+        pairingKey: "ML-ACCOUNT-SYNC",
+      }, () => {
+        setupLoggedInUI(currentUser);
+      });
+    } catch (err) {
+      showError("Could not reach server at " + apiBaseUrl + ". Is it running?");
+      loginBtnText.textContent = isRegistering ? "Register & Sync" : "Sign In & Sync";
+    }
+  }
+
+  function showError(msg) {
+    loginErrorMsg.textContent = msg;
+    loginErrorMsg.style.display = "block";
   }
 
   emailLoginBtn.addEventListener("click", performEmailLogin);
-  loginEmailInput.addEventListener("keydown", (e) => {
+  loginPasswordInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") performEmailLogin();
   });
 
-  // 4. Save Bookmark Action
+  // 4. Save Bookmark Action (Saves to both Cloud API & local storage)
   async function saveBookmark() {
     if (!currentTab || !currentUser) return;
 
@@ -162,6 +227,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       savedAt: new Date().toISOString(),
     };
 
+    saveLinkBtn.disabled = true;
+    saveLinkBtn.querySelector("span").textContent = "Saving to Cloud...";
+
+    // 1. Post to Central API if token exists
+    if (authToken) {
+      try {
+        await fetch(`${apiBaseUrl}/api/links`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${authToken}`
+          },
+          body: JSON.stringify(newBookmark)
+        });
+      } catch (err) {
+        console.warn("Could not post to cloud API, saved locally:", err);
+      }
+    }
+
+    // 2. Save locally for instant offline cache
     chrome.storage.local.get(["savedLinks"], (result) => {
       const links = result.savedLinks || [];
       links.unshift(newBookmark);
@@ -169,6 +254,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         saveFormView.classList.remove("active");
         successView.classList.add("active");
         successSubtitle.textContent = `Synced to ${currentUser.email} under "${workspace}".`;
+        saveLinkBtn.disabled = false;
+        saveLinkBtn.querySelector("span").textContent = "Save to MightyLink";
       });
     });
   }
@@ -194,7 +281,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   logoutBtn.addEventListener("click", () => {
-    chrome.storage.local.remove(["userEmail", "userName"], () => {
+    chrome.storage.local.remove(["authToken", "userEmail", "userName"], () => {
+      authToken = null;
       currentUser = null;
       setupLoggedOutUI();
     });

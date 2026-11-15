@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../services/db_service.dart';
 import '../../services/dashboard_service.dart';
+import '../../services/cloud_account_service.dart';
 import '../../theme/app_colors.dart';
 
 class ExtensionSheet extends StatefulWidget {
@@ -14,6 +15,7 @@ class ExtensionSheet extends StatefulWidget {
 class _ExtensionSheetState extends State<ExtensionSheet> {
   bool _copied = false;
   bool _copiedEmail = false;
+  bool _isSyncing = false;
 
   void _copyToken() {
     Clipboard.setData(ClipboardData(text: DashboardService.extensionToken));
@@ -57,6 +59,88 @@ class _ExtensionSheetState extends State<ExtensionSheet> {
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _copiedEmail = false);
     });
+  }
+
+  void _syncWithCloud() async {
+    if (!CloudAccountService.isLoggedIn) {
+      _showLoginDialog();
+      return;
+    }
+
+    setState(() => _isSyncing = true);
+    final res = await CloudAccountService.syncNow();
+    if (mounted) {
+      setState(() => _isSyncing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(res['success'] == true ? res['message'] : res['error']),
+          backgroundColor: res['success'] == true ? AppColors.fabGreen : AppColors.deleteRed,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  void _showLoginDialog() {
+    final emailCtrl = TextEditingController(text: DbService.activeUser);
+    final passCtrl = TextEditingController();
+    bool isReg = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDlgState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Text(isReg ? 'Create Cloud Account' : 'Sign in to Cloud'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailCtrl,
+                decoration: const InputDecoration(labelText: 'Email Address'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () => setDlgState(() => isReg = !isReg),
+                child: Text(isReg ? 'Already have an account? Sign In' : 'No account? Register free'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                setState(() => _isSyncing = true);
+                final res = isReg
+                    ? await CloudAccountService.register(email: emailCtrl.text, password: passCtrl.text)
+                    : await CloudAccountService.login(email: emailCtrl.text, password: passCtrl.text);
+
+                if (res['success'] == true) {
+                  _syncWithCloud();
+                } else if (mounted) {
+                  setState(() => _isSyncing = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(res['error']), backgroundColor: AppColors.deleteRed),
+                  );
+                }
+              },
+              child: Text(isReg ? 'Register & Sync' : 'Sign In & Sync'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -257,6 +341,33 @@ class _ExtensionSheetState extends State<ExtensionSheet> {
                   const Text(
                     'Sign in with this email in your desktop browser extension to automatically sync all your workspaces and bookmarks.',
                     style: TextStyle(fontSize: 12, color: AppColors.cardSubtitle, height: 1.4),
+                  ),
+                  const SizedBox(height: 14),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      onPressed: _isSyncing ? null : _syncWithCloud,
+                      icon: _isSyncing
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.cloud_sync_rounded, size: 20),
+                      label: Text(
+                        _isSyncing
+                            ? 'Syncing with Cloud...'
+                            : (CloudAccountService.isLoggedIn ? 'Sync Now with Cloud (Web + Ext)' : 'Connect / Sign In Cloud Account'),
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryViolet,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                    ),
                   ),
                 ],
               ),

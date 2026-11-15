@@ -7,6 +7,7 @@ import 'screens/splash_screen.dart';
 import 'services/db_service.dart';
 import 'services/dashboard_service.dart';
 import 'services/google_drive_sync_service.dart';
+import 'services/cloud_account_service.dart';
 import 'theme/app_colors.dart';
 
 void main() async {
@@ -37,6 +38,7 @@ void main() async {
   
   await DashboardService.init();
   await GoogleDriveSyncService.init();
+  await CloudAccountService.init();
   
   runApp(const LinkNestApp());
 }

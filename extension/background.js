@@ -2,7 +2,10 @@
 
 chrome.runtime.onInstalled.addListener(() => {
   // Initialize default storage
-  chrome.storage.local.get(["pairingKey", "workspaces", "savedLinks"], (data) => {
+  chrome.storage.local.get(["pairingKey", "workspaces", "savedLinks", "apiUrl"], (data) => {
+    if (!data.apiUrl) {
+      chrome.storage.local.set({ apiUrl: "http://localhost:5000" });
+    }
     if (!data.pairingKey) {
       chrome.storage.local.set({ pairingKey: "ML-8942-SYNC" });
     }
@@ -54,10 +57,12 @@ chrome.commands.onCommand.addListener(async (command) => {
 });
 
 function saveBookmarkFromBackground(title, url, favicon) {
-  chrome.storage.local.get(["savedLinks", "defaultWorkspace", "userEmail"], (result) => {
+  chrome.storage.local.get(["savedLinks", "defaultWorkspace", "userEmail", "authToken", "apiUrl"], async (result) => {
     const links = result.savedLinks || [];
     const workspace = result.defaultWorkspace || "General";
     const userEmail = result.userEmail || "alex@mightylink.io";
+    const token = result.authToken;
+    const apiUrl = result.apiUrl || "http://localhost:5000";
 
     const newBookmark = {
       id: "bm_" + Date.now(),
@@ -72,6 +77,22 @@ function saveBookmarkFromBackground(title, url, favicon) {
       favicon,
       savedAt: new Date().toISOString(),
     };
+
+    // Post to unified cloud API
+    if (token) {
+      try {
+        await fetch(`${apiUrl}/api/links`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(newBookmark)
+        });
+      } catch (err) {
+        console.warn("Could not post to cloud API from background:", err);
+      }
+    }
 
     links.unshift(newBookmark);
     chrome.storage.local.set({ savedLinks: links }, () => {
