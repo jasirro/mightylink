@@ -36,15 +36,14 @@ class BiometricService {
 
   /// Triggers the system biometric authentication dialog
   static Future<bool> authenticate({
-    String reason = 'Scan fingerprint or Face ID to unlock MightyLink Secure Vault',
+    String reason =
+        'Scan fingerprint or Face ID to unlock MightyLink Secure Vault',
   }) async {
     try {
       final bool didAuthenticate = await _auth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: false,
-        ),
+        biometricOnly: false,
+        persistAcrossBackgrounding: true,
       );
       return didAuthenticate;
     } on PlatformException catch (e) {

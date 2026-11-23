@@ -28,12 +28,12 @@ class GoogleDriveSyncService {
   static const String _sheetFileName = 'MightyLink_Database';
 
   // Safe Google OAuth scopes (NO risky full Gmail inbox scopes)
-  static final GoogleSignIn _googleSignIn = GoogleSignIn(
-    scopes: [
-      drive.DriveApi.driveFileScope, // Only files created by MightyLink
-      sheets.SheetsApi.spreadsheetsScope, // Read/write personal spreadsheet
-    ],
-  );
+  static const List<String> _googleScopes = [
+    drive.DriveApi.driveFileScope,
+    sheets.SheetsApi.spreadsheetsScope,
+  ];
+  static final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  static Future<void>? _googleSignInInitialization;
 
   static final ValueNotifier<int> syncNotifier = ValueNotifier<int>(0);
   static bool isSyncing = false;
@@ -45,6 +45,7 @@ class GoogleDriveSyncService {
   static Timer? _debounceSyncTimer;
 
   static Future<void> init() async {
+    await _ensureGoogleSignInInitialized();
     if (!Hive.isBoxOpen(_syncBoxName)) {
       await Hive.openBox(_syncBoxName);
     }
@@ -53,9 +54,15 @@ class GoogleDriveSyncService {
     }
   }
 
+  static Future<void> _ensureGoogleSignInInitialized() {
+    return _googleSignInInitialization ??= _googleSignIn.initialize();
+  }
+
   // --- Auto-Sync Worker Configuration ---
-  static bool get isAutoSyncEnabled => _syncBox.get('is_auto_sync_enabled', defaultValue: true);
-  static int get autoSyncIntervalMinutes => _syncBox.get('auto_sync_interval_minutes', defaultValue: 15);
+  static bool get isAutoSyncEnabled =>
+      _syncBox.get('is_auto_sync_enabled', defaultValue: true);
+  static int get autoSyncIntervalMinutes =>
+      _syncBox.get('auto_sync_interval_minutes', defaultValue: 15);
 
   static Future<void> setAutoSyncEnabled(bool enabled) async {
     await _syncBox.put('is_auto_sync_enabled', enabled);
@@ -78,9 +85,12 @@ class GoogleDriveSyncService {
   static void startAutoSyncWorker() {
     stopAutoSyncWorker();
     if (!isAutoSyncEnabled || !isConnected) return;
-    _autoSyncTimer = Timer.periodic(Duration(minutes: autoSyncIntervalMinutes), (_) {
-      triggerAutoSync(reason: 'periodic_timer');
-    });
+    _autoSyncTimer = Timer.periodic(
+      Duration(minutes: autoSyncIntervalMinutes),
+      (_) {
+        triggerAutoSync(reason: 'periodic_timer');
+      },
+    );
   }
 
   static void stopAutoSyncWorker() {
@@ -100,7 +110,9 @@ class GoogleDriveSyncService {
   static Future<void> triggerAutoSync({String reason = 'background'}) async {
     if (!isConnected || isSyncing) return;
     try {
-      debugPrint('[AutoSyncWorker] Running automatic sync (reason: $reason)...');
+      debugPrint(
+        '[AutoSyncWorker] Running automatic sync (reason: $reason)...',
+      );
       await syncToGoogleSheets();
     } catch (e) {
       debugPrint('[AutoSyncWorker] Auto-sync skipped: $e');
@@ -108,14 +120,21 @@ class GoogleDriveSyncService {
   }
 
   // --- Getters for UI State ---
-  static bool get isConnected => _syncBox.get('is_connected', defaultValue: false);
-  static String get connectedEmail => _syncBox.get('google_email', defaultValue: '');
-  static String get connectedName => _syncBox.get('google_name', defaultValue: '');
-  static String get connectedPhoto => _syncBox.get('google_photo', defaultValue: '');
-  static String get spreadsheetId => _syncBox.get('spreadsheet_id', defaultValue: '');
+  static bool get isConnected =>
+      _syncBox.get('is_connected', defaultValue: false);
+  static String get connectedEmail =>
+      _syncBox.get('google_email', defaultValue: '');
+  static String get connectedName =>
+      _syncBox.get('google_name', defaultValue: '');
+  static String get connectedPhoto =>
+      _syncBox.get('google_photo', defaultValue: '');
+  static String get spreadsheetId =>
+      _syncBox.get('spreadsheet_id', defaultValue: '');
   static String get spreadsheetUrl => _syncBox.get(
     'spreadsheet_url',
-    defaultValue: spreadsheetId.isNotEmpty ? 'https://docs.google.com/spreadsheets/d/$spreadsheetId' : '',
+    defaultValue: spreadsheetId.isNotEmpty
+        ? 'https://docs.google.com/spreadsheets/d/$spreadsheetId'
+        : '',
   );
 
   static DateTime? get lastSyncTime {
@@ -142,8 +161,12 @@ class GoogleDriveSyncService {
     }
   }
 
-  static List<String> get deletedLinkIds => List<String>.from(_syncBox.get('tombstone_links', defaultValue: <String>[]));
-  static List<String> get deletedGroupIds => List<String>.from(_syncBox.get('tombstone_groups', defaultValue: <String>[]));
+  static List<String> get deletedLinkIds => List<String>.from(
+    _syncBox.get('tombstone_links', defaultValue: <String>[]),
+  );
+  static List<String> get deletedGroupIds => List<String>.from(
+    _syncBox.get('tombstone_groups', defaultValue: <String>[]),
+  );
 
   static void _clearTombstones() {
     _syncBox.put('tombstone_links', <String>[]);
@@ -153,15 +176,19 @@ class GoogleDriveSyncService {
   // --- Connect Google Account ---
   static Future<GoogleSignInAccount?> connectGoogleAccount() async {
     try {
-      final account = await _googleSignIn.signIn();
-      if (account != null) {
-        await _syncBox.put('is_connected', true);
-        await _syncBox.put('google_email', account.email);
-        await _syncBox.put('google_name', account.displayName ?? account.email.split('@').first);
-        await _syncBox.put('google_photo', account.photoUrl ?? '');
-        startAutoSyncWorker();
-        syncNotifier.value++;
-      }
+      await _ensureGoogleSignInInitialized();
+      final account = await _googleSignIn.authenticate(
+        scopeHint: _googleScopes,
+      );
+      await _syncBox.put('is_connected', true);
+      await _syncBox.put('google_email', account.email);
+      await _syncBox.put(
+        'google_name',
+        account.displayName ?? account.email.split('@').first,
+      );
+      await _syncBox.put('google_photo', account.photoUrl ?? '');
+      startAutoSyncWorker();
+      syncNotifier.value++;
       return account;
     } catch (e) {
       debugPrint('Google Sign In Error: $e');
@@ -173,6 +200,7 @@ class GoogleDriveSyncService {
   static Future<void> disconnectGoogleAccount() async {
     stopAutoSyncWorker();
     try {
+      await _ensureGoogleSignInInitialized();
       await _googleSignIn.signOut();
     } catch (_) {}
     await _syncBox.put('is_connected', false);
@@ -192,19 +220,26 @@ class GoogleDriveSyncService {
     syncNotifier.value++;
 
     try {
-      var account = _googleSignIn.currentUser;
-      account ??= await _googleSignIn.signInSilently();
-      account ??= await _googleSignIn.signIn();
-
-      if (account == null) throw Exception("Google Sign-in was cancelled or aborted.");
+      await _ensureGoogleSignInInitialized();
+      var account = await _googleSignIn.attemptLightweightAuthentication();
+      account ??= await _googleSignIn.authenticate(scopeHint: _googleScopes);
 
       // Save user profile
       await _syncBox.put('is_connected', true);
       await _syncBox.put('google_email', account.email);
-      await _syncBox.put('google_name', account.displayName ?? account.email.split('@').first);
+      await _syncBox.put(
+        'google_name',
+        account.displayName ?? account.email.split('@').first,
+      );
       await _syncBox.put('google_photo', account.photoUrl ?? '');
 
-      final authHeaders = await account.authHeaders;
+      final authHeaders = await account.authorizationClient.authorizationHeaders(
+        _googleScopes,
+        promptIfNecessary: true,
+      );
+      if (authHeaders == null) {
+        throw StateError('Google authorization was not granted.');
+      }
       final authClient = GoogleAuthClient(authHeaders);
       final driveApi = drive.DriveApi(authClient);
       final sheetsApi = sheets.SheetsApi(authClient);
@@ -212,7 +247,8 @@ class GoogleDriveSyncService {
       // 1. Locate or Auto-Create Personal Spreadsheet
       String sheetId = spreadsheetId;
       if (sheetId.isEmpty) {
-        final query = "name = '$_sheetFileName' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
+        final query =
+            "name = '$_sheetFileName' and mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false";
         final fileList = await driveApi.files.list(q: query, spaces: 'drive');
 
         if (fileList.files != null && fileList.files!.isNotEmpty) {
@@ -228,18 +264,41 @@ class GoogleDriveSyncService {
           // Add required tabs
           final batchUpdate = sheets.BatchUpdateSpreadsheetRequest(
             requests: [
-              sheets.Request(addSheet: sheets.AddSheetRequest(properties: sheets.SheetProperties(title: 'Workspaces'))),
-              sheets.Request(addSheet: sheets.AddSheetRequest(properties: sheets.SheetProperties(title: 'Links'))),
-              sheets.Request(addSheet: sheets.AddSheetRequest(properties: sheets.SheetProperties(title: 'Reminders'))),
-              sheets.Request(addSheet: sheets.AddSheetRequest(properties: sheets.SheetProperties(title: 'VaultEncrypted'))),
-              sheets.Request(addSheet: sheets.AddSheetRequest(properties: sheets.SheetProperties(title: 'SyncMeta'))),
+              sheets.Request(
+                addSheet: sheets.AddSheetRequest(
+                  properties: sheets.SheetProperties(title: 'Workspaces'),
+                ),
+              ),
+              sheets.Request(
+                addSheet: sheets.AddSheetRequest(
+                  properties: sheets.SheetProperties(title: 'Links'),
+                ),
+              ),
+              sheets.Request(
+                addSheet: sheets.AddSheetRequest(
+                  properties: sheets.SheetProperties(title: 'Reminders'),
+                ),
+              ),
+              sheets.Request(
+                addSheet: sheets.AddSheetRequest(
+                  properties: sheets.SheetProperties(title: 'VaultEncrypted'),
+                ),
+              ),
+              sheets.Request(
+                addSheet: sheets.AddSheetRequest(
+                  properties: sheets.SheetProperties(title: 'SyncMeta'),
+                ),
+              ),
             ],
           );
           await sheetsApi.spreadsheets.batchUpdate(batchUpdate, sheetId);
         }
 
         await _syncBox.put('spreadsheet_id', sheetId);
-        await _syncBox.put('spreadsheet_url', 'https://docs.google.com/spreadsheets/d/$sheetId');
+        await _syncBox.put(
+          'spreadsheet_url',
+          'https://docs.google.com/spreadsheets/d/$sheetId',
+        );
       }
 
       // 2. Fetch Remote Data for Two-Way Merge
@@ -247,7 +306,10 @@ class GoogleDriveSyncService {
       final remoteLinksMap = <String, Map<String, dynamic>>{};
 
       try {
-        final groupsRes = await sheetsApi.spreadsheets.values.get(sheetId, 'Workspaces!A:E');
+        final groupsRes = await sheetsApi.spreadsheets.values.get(
+          sheetId,
+          'Workspaces!A:E',
+        );
         if (groupsRes.values != null && groupsRes.values!.length > 1) {
           for (int i = 1; i < groupsRes.values!.length; i++) {
             final row = groupsRes.values![i];
@@ -257,14 +319,19 @@ class GoogleDriveSyncService {
               'id': id,
               'name': row.length > 1 ? row[1].toString() : 'Workspace',
               'createdAt': row.length > 2 ? row[2].toString() : '',
-              'isDeleted': row.length > 4 ? row[4].toString().toLowerCase() == 'true' : false,
+              'isDeleted': row.length > 4
+                  ? row[4].toString().toLowerCase() == 'true'
+                  : false,
             };
           }
         }
       } catch (_) {}
 
       try {
-        final linksRes = await sheetsApi.spreadsheets.values.get(sheetId, 'Links!A:H');
+        final linksRes = await sheetsApi.spreadsheets.values.get(
+          sheetId,
+          'Links!A:H',
+        );
         if (linksRes.values != null && linksRes.values!.length > 1) {
           for (int i = 1; i < linksRes.values!.length; i++) {
             final row = linksRes.values![i];
@@ -275,10 +342,14 @@ class GoogleDriveSyncService {
               'groupId': row.length > 1 ? row[1].toString() : '',
               'title': row.length > 2 ? row[2].toString() : '',
               'url': row.length > 3 ? row[3].toString() : '',
-              'isFavorite': row.length > 4 ? row[4].toString().toLowerCase() == 'true' : false,
+              'isFavorite': row.length > 4
+                  ? row[4].toString().toLowerCase() == 'true'
+                  : false,
               'createdAt': row.length > 5 ? row[5].toString() : '',
               'note': row.length > 6 ? row[6].toString() : '',
-              'isDeleted': row.length > 7 ? row[7].toString().toLowerCase() == 'true' : false,
+              'isDeleted': row.length > 7
+                  ? row[7].toString().toLowerCase() == 'true'
+                  : false,
             };
           }
         }
@@ -322,7 +393,10 @@ class GoogleDriveSyncService {
 
       // 4b. Fetch & Merge Remote Reminders
       try {
-        final remindersRes = await sheetsApi.spreadsheets.values.get(sheetId, 'Reminders!A:H');
+        final remindersRes = await sheetsApi.spreadsheets.values.get(
+          sheetId,
+          'Reminders!A:H',
+        );
         if (remindersRes.values != null && remindersRes.values!.length > 1) {
           final localReminders = DashboardService.getReminders();
           final localIds = localReminders.map((rem) => rem.id).toSet();
@@ -330,18 +404,26 @@ class GoogleDriveSyncService {
             final row = remindersRes.values![i];
             if (row.isEmpty) continue;
             final id = row[0].toString();
-            final isDeleted = row.length > 7 ? row[7].toString().toLowerCase() == 'true' : false;
+            final isDeleted = row.length > 7
+                ? row[7].toString().toLowerCase() == 'true'
+                : false;
             if (isDeleted) {
               DashboardService.deleteReminder(id);
             } else if (!localIds.contains(id)) {
-              DashboardService.addReminder(ReminderItem(
-                id: id,
-                title: row.length > 1 ? row[1].toString() : '',
-                url: row.length > 2 ? row[2].toString() : '',
-                dueDate: row.length > 3 ? (DateTime.tryParse(row[3].toString()) ?? DateTime.now()) : DateTime.now(),
-                priority: row.length > 4 ? row[4].toString() : 'normal',
-                isCompleted: row.length > 5 ? row[5].toString().toLowerCase() == 'true' : false,
-              ));
+              DashboardService.addReminder(
+                ReminderItem(
+                  id: id,
+                  title: row.length > 1 ? row[1].toString() : '',
+                  url: row.length > 2 ? row[2].toString() : '',
+                  dueDate: row.length > 3
+                      ? (DateTime.tryParse(row[3].toString()) ?? DateTime.now())
+                      : DateTime.now(),
+                  priority: row.length > 4 ? row[4].toString() : 'normal',
+                  isCompleted: row.length > 5
+                      ? row[5].toString().toLowerCase() == 'true'
+                      : false,
+                ),
+              );
             }
           }
         }
@@ -349,7 +431,10 @@ class GoogleDriveSyncService {
 
       // 4c. Fetch & Merge Remote Encrypted Vault
       try {
-        final vaultRes = await sheetsApi.spreadsheets.values.get(sheetId, 'VaultEncrypted!A:G');
+        final vaultRes = await sheetsApi.spreadsheets.values.get(
+          sheetId,
+          'VaultEncrypted!A:G',
+        );
         if (vaultRes.values != null && vaultRes.values!.length > 1) {
           final localVault = DashboardService.getVaultItems();
           final localIds = localVault.map((v) => v.id).toSet();
@@ -358,17 +443,29 @@ class GoogleDriveSyncService {
             final row = vaultRes.values![i];
             if (row.isEmpty) continue;
             final id = row[0].toString();
-            final isDeleted = row.length > 6 ? row[6].toString().toLowerCase() == 'true' : false;
+            final isDeleted = row.length > 6
+                ? row[6].toString().toLowerCase() == 'true'
+                : false;
             if (isDeleted) {
               DashboardService.deleteVaultItem(id);
             } else if (!localIds.contains(id)) {
-              DashboardService.addVaultItem(VaultItem(
-                id: id,
-                title: row.length > 1 ? VaultCipher.decrypt(row[1].toString(), pin) : '',
-                url: row.length > 2 ? VaultCipher.decrypt(row[2].toString(), pin) : '',
-                secretNote: row.length > 3 ? VaultCipher.decrypt(row[3].toString(), pin) : '',
-                createdAt: row.length > 4 ? (DateTime.tryParse(row[4].toString()) ?? DateTime.now()) : DateTime.now(),
-              ));
+              DashboardService.addVaultItem(
+                VaultItem(
+                  id: id,
+                  title: row.length > 1
+                      ? VaultCipher.decrypt(row[1].toString(), pin)
+                      : '',
+                  url: row.length > 2
+                      ? VaultCipher.decrypt(row[2].toString(), pin)
+                      : '',
+                  secretNote: row.length > 3
+                      ? VaultCipher.decrypt(row[3].toString(), pin)
+                      : '',
+                  createdAt: row.length > 4
+                      ? (DateTime.tryParse(row[4].toString()) ?? DateTime.now())
+                      : DateTime.now(),
+                ),
+              );
             }
           }
         }
@@ -378,21 +475,42 @@ class GoogleDriveSyncService {
       final allLocalGroups = localGroupsBox.values.toList();
       final deletedGIds = deletedGroupIds;
       final groupRows = <List<Object>>[
-        ['ID', 'Name', 'CreatedAt', 'UpdatedAt', 'IsDeleted']
+        ['ID', 'Name', 'CreatedAt', 'UpdatedAt', 'IsDeleted'],
       ];
 
       for (var g in allLocalGroups) {
-        groupRows.add([g.id, g.name, g.createdAt.toIso8601String(), DateTime.now().toIso8601String(), 'false']);
+        groupRows.add([
+          g.id,
+          g.name,
+          g.createdAt.toIso8601String(),
+          DateTime.now().toIso8601String(),
+          'false',
+        ]);
       }
       for (var gid in deletedGIds) {
-        groupRows.add([gid, 'Deleted', '', DateTime.now().toIso8601String(), 'true']);
+        groupRows.add([
+          gid,
+          'Deleted',
+          '',
+          DateTime.now().toIso8601String(),
+          'true',
+        ]);
       }
 
       // 6. Build Two-Way PUSH Rows to Google Sheets (Links)
       final allLocalLinks = localLinksBox.values.toList();
       final deletedLIds = deletedLinkIds;
       final linkRows = <List<Object>>[
-        ['ID', 'GroupId', 'Title', 'URL', 'IsFavorite', 'CreatedAt', 'Note', 'IsDeleted']
+        [
+          'ID',
+          'GroupId',
+          'Title',
+          'URL',
+          'IsFavorite',
+          'CreatedAt',
+          'Note',
+          'IsDeleted',
+        ],
       ];
 
       for (var l in allLocalLinks) {
@@ -404,7 +522,7 @@ class GoogleDriveSyncService {
           l.isFavorite.toString(),
           l.createdAt.toIso8601String(),
           l.note,
-          'false'
+          'false',
         ]);
       }
       for (var lid in deletedLIds) {
@@ -414,7 +532,16 @@ class GoogleDriveSyncService {
       // 7. Build Reminders Rows (Smart Reminder & Todo)
       final reminders = DashboardService.getReminders();
       final reminderRows = <List<Object>>[
-        ['ID', 'Title', 'URL', 'DueDate', 'Priority', 'IsCompleted', 'UpdatedAt', 'IsDeleted']
+        [
+          'ID',
+          'Title',
+          'URL',
+          'DueDate',
+          'Priority',
+          'IsCompleted',
+          'UpdatedAt',
+          'IsDeleted',
+        ],
       ];
       for (var rem in reminders) {
         reminderRows.add([
@@ -425,7 +552,7 @@ class GoogleDriveSyncService {
           rem.priority,
           rem.isCompleted.toString(),
           DateTime.now().toIso8601String(),
-          'false'
+          'false',
         ]);
       }
 
@@ -433,7 +560,15 @@ class GoogleDriveSyncService {
       final pin = DashboardService.vaultPin;
       final vaultItems = DashboardService.getVaultItems();
       final vaultRows = <List<Object>>[
-        ['ID', 'TitleCipher', 'URLCipher', 'SecretNoteCipher', 'CreatedAt', 'UpdatedAt', 'IsDeleted']
+        [
+          'ID',
+          'TitleCipher',
+          'URLCipher',
+          'SecretNoteCipher',
+          'CreatedAt',
+          'UpdatedAt',
+          'IsDeleted',
+        ],
       ];
       for (var v in vaultItems) {
         vaultRows.add([
@@ -443,7 +578,7 @@ class GoogleDriveSyncService {
           VaultCipher.encrypt(v.secretNote, pin),
           v.createdAt.toIso8601String(),
           DateTime.now().toIso8601String(),
-          'false'
+          'false',
         ]);
       }
 
@@ -452,7 +587,11 @@ class GoogleDriveSyncService {
         ['Key', 'Value', 'UpdatedAt'],
         ['App', 'MightyLink', DateTime.now().toIso8601String()],
         ['Version', '1.0.0', DateTime.now().toIso8601String()],
-        ['LastSync', DateTime.now().toIso8601String(), DateTime.now().toIso8601String()],
+        [
+          'LastSync',
+          DateTime.now().toIso8601String(),
+          DateTime.now().toIso8601String(),
+        ],
         ['Account', account.email, DateTime.now().toIso8601String()],
       ];
 
@@ -475,7 +614,6 @@ class GoogleDriveSyncService {
       // Clean up tombstones and record sync timestamp
       _clearTombstones();
       await _syncBox.put('last_sync_time', DateTime.now().toIso8601String());
-
     } catch (e) {
       debugPrint('Sync Engine Error: $e');
       lastError = e.toString();
