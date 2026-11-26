@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../theme/app_colors.dart';
+import '../services/firebase_auth_service.dart';
 import '../widgets/linku_logo.dart';
 import 'main_screen.dart';
 import 'login_screen.dart';
@@ -24,8 +24,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Add smooth duration for the Figma splash presentation
     await Future.delayed(const Duration(milliseconds: 2200));
 
-    final authBox = Hive.box('auth');
-    final isLoggedIn = authBox.get('isLoggedIn', defaultValue: false);
+    final isLoggedIn = FirebaseAuthService.currentUser != null;
 
     if (mounted) {
       if (isLoggedIn) {
@@ -67,14 +66,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 .fadeIn(duration: 600.ms),
             const SizedBox(height: 16),
             const Text(
-              'Your workspace link hub',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textOnPurpleMuted,
-                letterSpacing: 0.2,
-              ),
-            )
+                  'Your workspace link hub',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textOnPurpleMuted,
+                    letterSpacing: 0.2,
+                  ),
+                )
                 .animate()
                 .fadeIn(delay: 300.ms, duration: 500.ms)
                 .slideY(begin: 0.2, end: 0, duration: 500.ms),

@@ -7,6 +7,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'db_service.dart';
 import 'dashboard_service.dart';
+import 'firebase_auth_service.dart';
 import 'vault_cipher.dart';
 import '../models/group.dart';
 import '../models/saved_link.dart';
@@ -55,7 +56,11 @@ class GoogleDriveSyncService {
   }
 
   static Future<void> _ensureGoogleSignInInitialized() {
-    return _googleSignInInitialization ??= _googleSignIn.initialize();
+    return _googleSignInInitialization ??= _googleSignIn.initialize(
+      serverClientId: FirebaseAuthService.googleServerClientId.isEmpty
+          ? null
+          : FirebaseAuthService.googleServerClientId,
+    );
   }
 
   // --- Auto-Sync Worker Configuration ---
@@ -233,10 +238,8 @@ class GoogleDriveSyncService {
       );
       await _syncBox.put('google_photo', account.photoUrl ?? '');
 
-      final authHeaders = await account.authorizationClient.authorizationHeaders(
-        _googleScopes,
-        promptIfNecessary: true,
-      );
+      final authHeaders = await account.authorizationClient
+          .authorizationHeaders(_googleScopes, promptIfNecessary: true);
       if (authHeaders == null) {
         throw StateError('Google authorization was not granted.');
       }

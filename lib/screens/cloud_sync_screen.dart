@@ -50,7 +50,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
             ),
             backgroundColor: AppColors.fabGreen,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -59,9 +61,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Sync error: $e'),
-            backgroundColor: AppColors.deleteRed,
+            backgroundColor: const Color.fromARGB(255, 135, 15, 15),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -78,7 +82,8 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     } catch (e) {
       if (mounted) {
         final errString = e.toString();
-        if (errString.contains('ApiException: 10') || errString.contains('10:')) {
+        if (errString.contains('ApiException: 10') ||
+            errString.contains('10:')) {
           _showGoogleSetupDialog(context);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -106,11 +111,19 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Row(
           children: [
-            Icon(Icons.info_outline_rounded, color: AppColors.primaryViolet, size: 26),
+            Icon(
+              Icons.info_outline_rounded,
+              color: AppColors.primaryViolet,
+              size: 26,
+            ),
             SizedBox(width: 10),
             Text(
               'Google Setup Needed',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.cardTitle),
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: AppColors.cardTitle,
+              ),
             ),
           ],
         ),
@@ -123,14 +136,23 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
               style: TextStyle(fontSize: 13, color: AppColors.cardSubtitle),
             ),
             const SizedBox(height: 16),
-            const Text('Package Name:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.cardTitle)),
+            const Text(
+              'Package Name:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.cardTitle,
+              ),
+            ),
             const SizedBox(height: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F0FF),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primaryViolet.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppColors.primaryViolet.withValues(alpha: 0.25),
+                ),
               ),
               child: Row(
                 children: [
@@ -145,27 +167,42 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.primaryViolet),
+                    icon: const Icon(
+                      Icons.copy_rounded,
+                      size: 18,
+                      color: AppColors.primaryViolet,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: 'Copy Package Name',
                     onPressed: () {
                       Clipboard.setData(const ClipboardData(text: packageName));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Package name copied!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Package name copied!')),
+                      );
                     },
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
-            const Text('Debug SHA-1 Fingerprint:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.cardTitle)),
+            const Text(
+              'Debug SHA-1 Fingerprint:',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: AppColors.cardTitle,
+              ),
+            ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF3F0FF),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primaryViolet.withValues(alpha: 0.25)),
+                border: Border.all(
+                  color: AppColors.primaryViolet.withValues(alpha: 0.25),
+                ),
               ),
               child: Row(
                 children: [
@@ -181,13 +218,19 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.primaryViolet),
+                    icon: const Icon(
+                      Icons.copy_rounded,
+                      size: 18,
+                      color: AppColors.primaryViolet,
+                    ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     tooltip: 'Copy SHA-1',
                     onPressed: () {
                       Clipboard.setData(const ClipboardData(text: sha1));
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('SHA-1 copied!')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('SHA-1 copied!')),
+                      );
                     },
                   ),
                 ],
@@ -202,9 +245,14 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.accentYellow,
               foregroundColor: AppColors.yellowButtonText,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
-            child: const Text('Got it', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Got it',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -218,7 +266,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not open spreadsheet URL in browser')),
+          const SnackBar(
+            content: Text('Could not open spreadsheet URL in browser'),
+          ),
         );
       }
     }
@@ -226,10 +276,14 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
 
   void _createEmailWorkspace() {
     final groupsBox = DbService.groupsBox;
-    final existing = groupsBox.values.any((g) => g.name.toLowerCase() == 'email inbox');
+    final existing = groupsBox.values.any(
+      (g) => g.name.toLowerCase() == 'email inbox',
+    );
     if (existing) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('"Email Inbox" workspace already exists!')),
+        const SnackBar(
+          content: Text('"Email Inbox" workspace already exists!'),
+        ),
       );
       return;
     }
@@ -278,7 +332,10 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
       appBar: AppBar(
         title: const Text('Personal Cloud Sync'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
+          icon: const Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: Colors.white,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -302,7 +359,12 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
               ],
 
               // Sync Metrics
-              _buildMetricsGrid(totalLinks, totalGroups, totalReminders, totalVault),
+              _buildMetricsGrid(
+                totalLinks,
+                totalGroups,
+                totalReminders,
+                totalVault,
+              ),
 
               const SizedBox(height: 20),
 
@@ -318,16 +380,23 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: AppColors.yellowButtonText),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppColors.yellowButtonText,
+                          ),
                         )
                       : Icon(
-                          isConnected ? Icons.sync_rounded : Icons.login_rounded,
+                          isConnected
+                              ? Icons.sync_rounded
+                              : Icons.login_rounded,
                           color: AppColors.yellowButtonText,
                         ),
                   label: Text(
                     isSyncing
                         ? 'Synchronizing...'
-                        : (isConnected ? 'Sync Now (Two-Way Merge)' : 'Connect Google Drive Account'),
+                        : (isConnected
+                              ? 'Sync Now (Two-Way Merge)'
+                              : 'Connect Google Drive Account'),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -336,7 +405,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.accentYellow,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
                     elevation: 0,
                   ),
                 ),
@@ -371,7 +442,10 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: const Text('Disconnect', style: TextStyle(color: Colors.red)),
+                              child: const Text(
+                                'Disconnect',
+                                style: TextStyle(color: Colors.red),
+                              ),
                             ),
                           ],
                         ),
@@ -380,10 +454,18 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                         await GoogleDriveSyncService.disconnectGoogleAccount();
                       }
                     },
-                    icon: const Icon(Icons.link_off_rounded, size: 16, color: Colors.white70),
+                    icon: const Icon(
+                      Icons.link_off_rounded,
+                      size: 16,
+                      color: Colors.white70,
+                    ),
                     label: const Text(
                       'Disconnect Google Account',
-                      style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
@@ -395,7 +477,12 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     );
   }
 
-  Widget _buildAccountCard(bool isConnected, String name, String email, String photo) {
+  Widget _buildAccountCard(
+    bool isConnected,
+    String name,
+    String email,
+    String photo,
+  ) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -416,7 +503,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
             backgroundColor: AppColors.surfaceVioletTint,
             backgroundImage: photo.isNotEmpty ? NetworkImage(photo) : null,
             child: photo.isEmpty
-                ? const Icon(Icons.account_circle_rounded, size: 44, color: AppColors.primaryViolet)
+                ? const Icon(
+                    Icons.account_circle_rounded,
+                    size: 44,
+                    color: AppColors.primaryViolet,
+                  )
                 : null,
           ),
           const SizedBox(width: 14),
@@ -428,7 +519,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        isConnected ? (name.isNotEmpty ? name : 'Google User') : 'Google Account',
+                        isConnected
+                            ? (name.isNotEmpty ? name : 'Google User')
+                            : 'Google Account',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
@@ -439,9 +532,14 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
-                        color: isConnected ? const Color(0xFFDCFCE7) : Colors.grey.shade200,
+                        color: isConnected
+                            ? const Color(0xFFDCFCE7)
+                            : Colors.grey.shade200,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -449,7 +547,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                         style: TextStyle(
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
-                          color: isConnected ? const Color(0xFF15803D) : Colors.grey.shade600,
+                          color: isConnected
+                              ? const Color(0xFF15803D)
+                              : Colors.grey.shade600,
                         ),
                       ),
                     ),
@@ -457,7 +557,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  isConnected ? email : 'Sign in to auto-sync your links to personal Google Drive',
+                  isConnected
+                      ? email
+                      : 'Sign in to auto-sync your links to personal Google Drive',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.cardSubtitle,
@@ -474,11 +576,19 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryViolet,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
               ),
-              child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              child: const Text(
+                'Sign In',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
             ),
         ],
       ),
@@ -514,7 +624,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.table_chart_rounded, color: Color(0xFF2E7D32), size: 24),
+                child: const Icon(
+                  Icons.table_chart_rounded,
+                  color: Color(0xFF2E7D32),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -553,17 +667,29 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   SizedBox(width: 6),
                   Text(
                     'Stored in your personal Drive',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF15803D)),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF15803D),
+                    ),
                   ),
                 ],
               ),
               if (sheetUrl.isNotEmpty)
                 TextButton.icon(
                   onPressed: _openSheetInBrowser,
-                  icon: const Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.primaryViolet),
+                  icon: const Icon(
+                    Icons.open_in_new_rounded,
+                    size: 14,
+                    color: AppColors.primaryViolet,
+                  ),
                   label: const Text(
                     'Open in Google Sheets',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primaryViolet),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.primaryViolet,
+                    ),
                   ),
                 ),
             ],
@@ -601,7 +727,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   color: AppColors.surfaceVioletTint,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.autorenew_rounded, color: AppColors.primaryViolet, size: 24),
+                child: const Icon(
+                  Icons.autorenew_rounded,
+                  color: AppColors.primaryViolet,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -619,7 +749,10 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     SizedBox(height: 2),
                     Text(
                       'Continuous background sync worker',
-                      style: TextStyle(fontSize: 12, color: AppColors.cardSubtitle),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.cardSubtitle,
+                      ),
                     ),
                   ],
                 ),
@@ -647,16 +780,26 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   children: [
                     Text(
                       'Periodic Interval',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.cardTitle),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.cardTitle,
+                      ),
                     ),
                     Text(
                       'Sync frequency while app is active',
-                      style: TextStyle(fontSize: 11, color: AppColors.cardSubtitle),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.cardSubtitle,
+                      ),
                     ),
                   ],
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceVioletTint,
                     borderRadius: BorderRadius.circular(12),
@@ -665,7 +808,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     value: interval,
                     underline: const SizedBox(),
                     isDense: true,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primaryViolet),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryViolet,
+                    ),
                     items: const [
                       DropdownMenuItem(value: 5, child: Text('Every 5 min')),
                       DropdownMenuItem(value: 15, child: Text('Every 15 min')),
@@ -674,7 +821,9 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     ],
                     onChanged: (newVal) async {
                       if (newVal != null) {
-                        await GoogleDriveSyncService.setAutoSyncInterval(newVal);
+                        await GoogleDriveSyncService.setAutoSyncInterval(
+                          newVal,
+                        );
                         setState(() {});
                       }
                     },
@@ -688,16 +837,26 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFF7F5FF),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primaryViolet.withValues(alpha: 0.15)),
+                border: Border.all(
+                  color: AppColors.primaryViolet.withValues(alpha: 0.15),
+                ),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.bolt_rounded, size: 18, color: AppColors.primaryViolet),
+                  Icon(
+                    Icons.bolt_rounded,
+                    size: 18,
+                    color: AppColors.primaryViolet,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Auto-syncs immediately on link edits & when returning from browser or extension.',
-                      style: TextStyle(fontSize: 11.5, color: AppColors.primaryViolet, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        color: AppColors.primaryViolet,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -709,21 +868,51 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
     );
   }
 
-  Widget _buildMetricsGrid(int links, int workspaces, int reminders, int vault) {
+  Widget _buildMetricsGrid(
+    int links,
+    int workspaces,
+    int reminders,
+    int vault,
+  ) {
     return Row(
       children: [
-        _buildMetricPill('Links', '$links', Icons.bookmark_rounded, AppColors.primaryViolet),
+        _buildMetricPill(
+          'Links',
+          '$links',
+          Icons.bookmark_rounded,
+          AppColors.primaryViolet,
+        ),
         const SizedBox(width: 8),
-        _buildMetricPill('Workspaces', '$workspaces', Icons.folder_rounded, const Color(0xFF0284C7)),
+        _buildMetricPill(
+          'Workspaces',
+          '$workspaces',
+          Icons.folder_rounded,
+          const Color(0xFF0284C7),
+        ),
         const SizedBox(width: 8),
-        _buildMetricPill('Reminders', '$reminders', Icons.alarm_rounded, AppColors.fabGreen),
+        _buildMetricPill(
+          'Reminders',
+          '$reminders',
+          Icons.alarm_rounded,
+          AppColors.fabGreen,
+        ),
         const SizedBox(width: 8),
-        _buildMetricPill('Vault', '$vault', Icons.shield_rounded, const Color(0xFFD97706)),
+        _buildMetricPill(
+          'Vault',
+          '$vault',
+          Icons.shield_rounded,
+          const Color(0xFFD97706),
+        ),
       ],
     );
   }
 
-  Widget _buildMetricPill(String label, String count, IconData icon, Color color) {
+  Widget _buildMetricPill(
+    String label,
+    String count,
+    IconData icon,
+    Color color,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
@@ -744,11 +933,19 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
             const SizedBox(height: 4),
             Text(
               count,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: color),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: color,
+              ),
             ),
             Text(
               label,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.cardSubtitle),
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: AppColors.cardSubtitle,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -783,7 +980,11 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                   color: const Color(0xFFFEE2E2),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.mark_email_read_rounded, color: Color(0xFFDC2626), size: 24),
+                child: const Icon(
+                  Icons.mark_email_read_rounded,
+                  color: Color(0xFFDC2626),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               const Expanded(
@@ -800,7 +1001,10 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
                     ),
                     Text(
                       'Zero-risk 1-click capture from any email',
-                      style: TextStyle(fontSize: 12, color: AppColors.cardSubtitle),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.cardSubtitle,
+                      ),
                     ),
                   ],
                 ),
@@ -810,21 +1014,35 @@ class _CloudSyncScreenState extends State<CloudSyncScreen> {
           const SizedBox(height: 12),
           const Text(
             'In Gmail on Android or Desktop, tap 3 dots > "Share" > "MightyLink" to bookmark links and articles instantly. Safe, private, and requiring zero dangerous inbox permissions.',
-            style: TextStyle(fontSize: 12, color: AppColors.cardSubtitle, height: 1.4),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.cardSubtitle,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: _createEmailWorkspace,
-              icon: const Icon(Icons.add_rounded, size: 16, color: AppColors.primaryViolet),
+              icon: const Icon(
+                Icons.add_rounded,
+                size: 16,
+                color: AppColors.primaryViolet,
+              ),
               label: const Text(
                 'Create "Email Inbox" Workspace',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primaryViolet),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.primaryViolet,
+                ),
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFDDD6FE)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),

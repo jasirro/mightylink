@@ -3,6 +3,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/db_service.dart';
+import '../services/firebase_auth_service.dart';
 import '../services/export_service.dart';
 import '../services/google_drive_sync_service.dart';
 import '../theme/app_colors.dart';
@@ -26,7 +27,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _rateUs() async {
-    final Uri url = Uri.parse('https://play.google.com/store/apps/details?id=com.example.linku');
+    final Uri url = Uri.parse(
+      'https://play.google.com/store/apps/details?id=com.example.linku',
+    );
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       debugPrint('Could not launch rate us URL');
     }
@@ -80,9 +83,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: const Icon(Icons.picture_as_pdf, color: Colors.red),
                 ),
-                title: const Text('Export as PDF Document', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Nicely formatted document for printing or reading'),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                title: const Text(
+                  'Export as PDF Document',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Nicely formatted document for printing or reading',
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await ExportService.exportAsPdf();
@@ -98,9 +108,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: const Icon(Icons.table_chart, color: Colors.green),
                 ),
-                title: const Text('Export as Excel Spreadsheet', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Structured table for data analysis (.xlsx)'),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                title: const Text(
+                  'Export as Excel Spreadsheet',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text(
+                  'Structured table for data analysis (.xlsx)',
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await ExportService.exportAsExcel();
@@ -116,9 +133,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: const Icon(Icons.code, color: Colors.blue),
                 ),
-                title: const Text('Export as JSON File', style: TextStyle(fontWeight: FontWeight.w600)),
+                title: const Text(
+                  'Export as JSON File',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 subtitle: const Text('Raw portable data backup format'),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 onTap: () async {
                   Navigator.pop(context);
                   await ExportService.exportAsJson();
@@ -140,7 +162,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text(
           'Log Out',
-          style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.cardTitle),
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: AppColors.cardTitle,
+          ),
         ),
         content: const Text(
           'Are you sure you want to log out of mightylink?',
@@ -150,13 +175,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.cardSubtitle)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.cardSubtitle),
+            ),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.deleteRed,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
             child: const Text('Log Out'),
           ),
@@ -165,9 +195,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed == true && context.mounted) {
-      final authBox = Hive.box('auth');
-      await authBox.put('isLoggedIn', false);
-      await authBox.put('currentUser', '');
+      await FirebaseAuthService.signOut();
       if (context.mounted) {
         Navigator.of(context, rootNavigator: true).pushReplacement(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -179,7 +207,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final authBox = Hive.box('auth');
-    final currentUser = authBox.get('currentUser', defaultValue: 'User') as String;
+    final currentUser =
+        authBox.get('currentUser', defaultValue: 'User') as String;
     final totalLinks = DbService.linksBox.values.length;
     final totalGroups = DbService.groupsBox.values.length;
 
@@ -215,82 +244,90 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
               // User Profile Card (Figma White Rounded Card)
               Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: const [AppColors.cardShadow],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 54,
-                      height: 54,
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfaceVioletTint,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          currentUser.isNotEmpty
-                              ? currentUser.substring(0, 1).toUpperCase()
-                              : 'U',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primaryViolet,
-                          ),
-                        ),
-                      ),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                      boxShadow: const [AppColors.cardShadow],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            currentUser.isNotEmpty ? currentUser : 'Alex Morgan',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.cardTitle,
-                            ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: const BoxDecoration(
+                            color: AppColors.surfaceVioletTint,
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceVioletTint,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Text(
-                              'mightylink Pro Member',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                          child: Center(
+                            child: Text(
+                              currentUser.isNotEmpty
+                                  ? currentUser.substring(0, 1).toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
                                 color: AppColors.primaryViolet,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                currentUser.isNotEmpty
+                                    ? currentUser
+                                    : 'Alex Morgan',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.cardTitle,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceVioletTint,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Text(
+                                  'mightylink Pro Member',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.primaryViolet,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceVioletTint,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.fabGreen,
+                            size: 20,
+                          ),
+                        ),
+                      ],
                     ),
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceVioletTint,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.fabGreen,
-                        size: 20,
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fade(duration: 300.ms).slideY(begin: 0.1, duration: 300.ms),
+                  )
+                  .animate()
+                  .fade(duration: 300.ms)
+                  .slideY(begin: 0.1, duration: 300.ms),
 
               const SizedBox(height: 20),
 
@@ -343,13 +380,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             shape: BoxShape.circle,
                           ),
                         ),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.iconMuted),
+                      const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: AppColors.iconMuted,
+                      ),
                     ],
                   ),
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const CloudSyncScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const CloudSyncScreen(),
+                      ),
                     ).then((_) => setState(() {}));
                   },
                 ),
@@ -359,7 +402,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   iconColor: AppColors.fabGreen,
                   title: 'Export Data',
                   subtitle: 'Save links as PDF document or Excel sheet',
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.iconMuted),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.iconMuted,
+                  ),
                   onTap: () => _exportDialog(context),
                 ),
               ]),
@@ -375,7 +422,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   iconColor: const Color(0xFFF59E0B),
                   title: 'Share mightylink',
                   subtitle: 'Recommend mightylink to friends or colleagues',
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.iconMuted),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.iconMuted,
+                  ),
                   onTap: _shareApp,
                 ),
                 const Divider(height: 1, indent: 64, endIndent: 20),
@@ -384,7 +435,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   iconColor: const Color(0xFFEAB308),
                   title: 'Rate on Play Store',
                   subtitle: 'Help us grow with a 5-star review',
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.iconMuted),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: AppColors.iconMuted,
+                  ),
                   onTap: _rateUs,
                 ),
                 const Divider(height: 1, indent: 64, endIndent: 20),
@@ -512,9 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         borderRadius: BorderRadius.circular(22),
         boxShadow: const [AppColors.cardShadow],
       ),
-      child: Column(
-        children: children,
-      ),
+      child: Column(children: children),
     );
   }
 

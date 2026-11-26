@@ -21,13 +21,17 @@ class ExportService {
           content.add(
             pw.Header(
               level: 0,
-              child: pw.Text("Linku Backup - ${DateTime.now().toIso8601String().split('T').first}"),
+              child: pw.Text(
+                "Linku Backup - ${DateTime.now().toIso8601String().split('T').first}",
+              ),
             ),
           );
 
           for (var group in groups) {
             content.add(pw.Header(level: 1, child: pw.Text(group.name)));
-            final groupLinks = links.where((l) => l.groupId == group.id).toList();
+            final groupLinks = links
+                .where((l) => l.groupId == group.id)
+                .toList();
             if (groupLinks.isEmpty) {
               content.add(pw.Text("No links in this workspace."));
             } else {
@@ -92,13 +96,15 @@ class ExportService {
     final data = {
       'groups': groups.map((g) => {'id': g.id, 'name': g.name}).toList(),
       'links': links
-          .map((l) => {
-                'id': l.id,
-                'groupId': l.groupId,
-                'title': l.title,
-                'url': l.url,
-                'isFavorite': l.isFavorite,
-              })
+          .map(
+            (l) => {
+              'id': l.id,
+              'groupId': l.groupId,
+              'title': l.title,
+              'url': l.url,
+              'isFavorite': l.isFavorite,
+            },
+          )
           .toList(),
     };
 

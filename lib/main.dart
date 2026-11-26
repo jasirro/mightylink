@@ -8,11 +8,12 @@ import 'services/db_service.dart';
 import 'services/dashboard_service.dart';
 import 'services/google_drive_sync_service.dart';
 import 'services/cloud_account_service.dart';
+import 'services/firebase_auth_service.dart';
 import 'theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -23,23 +24,32 @@ void main() async {
   );
 
   await Hive.initFlutter();
-  
+
   Hive.registerAdapter(GroupAdapter());
   Hive.registerAdapter(SavedLinkAdapter());
-  
+
   final authBox = await Hive.openBox('auth');
-  final isLoggedIn = authBox.get('isLoggedIn', defaultValue: false);
-  final currentUser = authBox.get('currentUser', defaultValue: '') as String;
-  
-  if (isLoggedIn && currentUser.isNotEmpty) {
-    DbService.activeUser = currentUser;
-    await DbService.openUserBoxes(currentUser);
+  await FirebaseAuthService.init();
+  final user = FirebaseAuthService.currentUser;
+
+  if (user != null) {
+    final userId = user.email ?? user.uid;
+    DbService.activeUser = userId;
+    await authBox.put('isLoggedIn', true);
+    await authBox.put(
+      'currentUser',
+      user.displayName ?? user.email ?? user.uid,
+    );
+    await authBox.put('currentUserId', userId);
+    await DbService.openUserBoxes(userId);
+  } else {
+    await authBox.put('isLoggedIn', false);
   }
-  
+
   await DashboardService.init();
   await GoogleDriveSyncService.init();
   await CloudAccountService.init();
-  
+
   runApp(const LinkNestApp());
 }
 
@@ -126,27 +136,54 @@ class _LinkNestAppState extends State<LinkNestApp> with WidgetsBindingObserver {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: AppColors.inputPurpleFill,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 16,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.inputPurpleBorder, width: 1.5),
+            borderSide: const BorderSide(
+              color: AppColors.inputPurpleBorder,
+              width: 1.5,
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.inputPurpleBorder, width: 1.5),
+            borderSide: const BorderSide(
+              color: AppColors.inputPurpleBorder,
+              width: 1.5,
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: AppColors.inputPurpleBorderFocused, width: 2),
+            borderSide: const BorderSide(
+              color: AppColors.inputPurpleBorderFocused,
+              width: 2,
+            ),
           ),
           labelStyle: const TextStyle(color: AppColors.textOnPurpleMuted),
           hintStyle: const TextStyle(color: AppColors.textOnPurpleMuted),
         ),
         textTheme: const TextTheme(
-          headlineLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, letterSpacing: -0.5),
-          headlineMedium: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-          titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, letterSpacing: -0.5),
-          titleMedium: TextStyle(color: AppColors.cardTitle, fontWeight: FontWeight.w600),
+          headlineLarge: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
+          ),
+          headlineMedium: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+          ),
+          titleLarge: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.5,
+          ),
+          titleMedium: TextStyle(
+            color: AppColors.cardTitle,
+            fontWeight: FontWeight.w600,
+          ),
           bodyLarge: TextStyle(color: Colors.white),
           bodyMedium: TextStyle(color: Colors.white),
           bodySmall: TextStyle(color: AppColors.textOnPurpleMuted),

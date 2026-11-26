@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "804361650910",
+    "project_id": "foodlive-msb",
+    "storage_bucket": "foodlive-msb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:804361650910:android:5c9762a3887e39a5aeb84f",
+        "android_client_info": {
+          "package_name": "com.linku.linku"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "804361650910-l9ptvcfrsj5n1ufm9bhdmkk2orrqrssv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.linku.linku",
+            "certificate_hash": "6a1d045bee82379de15a2a78f52a3158c851655e"
+          }
+        },
+        {
+          "client_id": "804361650910-tcap2sac0395159jhq1h280498tgr7f9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBcctlJ6RVfGosQSDVW5vk3pM8Pm87FnNQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "804361650910-tcap2sac0395159jhq1h280498tgr7f9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "804361650910-7el09tkas56uahtnoqon26ml16m84jbi.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.linku.linku"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
